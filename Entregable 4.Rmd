@@ -1,0 +1,681 @@
+---
+title: "Entregable 4"
+author: "Armando Sebastian Villalobos Blass"
+date: "18/6/2022"
+output: html_document
+---
+
+A) Introducción y objetivos
+
+La educación en el mundo es un factor importante para el desarrollo de los países debido a que es la base de todo niño y adolescente y permite que se desarrollen de manera eficiente en diferentes ámbitos como por ejemplo el laboral.
+
+El objetivo de este análisis es saber cuantos jóvenes en etapa secundaria se encuentran inscritos en los colegios y si esto es afectado por factores como el gasto que realizan los estados para la educación y si el nivel pobreza afecta la continuación escolar.
+
+B) Explicación de la variable dependiente y sustentación con literatura las variables independientes.
+
+La variable dependiente es el porcentaje de de inscripción escolar secundaria neta por país, porque este se encuentra afectado o influenciado por el PBI de los países, el gasto por parte del estado en educación y la pobreza de la población.
+
+Para el caso del PBI esta variable independiente se sustenta porque, según el IPE, la medición del PBI por ingresos, es decir, las remuneraciones pagos de impuestos, el consumo de capital fijo, entre otros, permite saber cuánto el estado puede recaudar para ejecutar de manera óptima en el mejoramiento de un país, en este caso, la educación.
+
+En cuanto al gasto en educación por parte del estado, según el Banco Mundial, es diferente en distintos países por factores como el nivel de desarrollo que ellos poseen y el nivel de eficiencia que tienen los estados para ejecutar de manera correcta los presupuestos para la educación.
+
+Por último, el nivl de pobreza, según el portal "el diaro de la educación", resalta que el impacto de la pobreza en el rendimiento escolar y puede producir fracaso escolar, más pobreza y exclusión social por no poseer educación mínima y no estar calificado para un trabajo de calidad que les permita salir de la pobreza.
+
+C) Análisis de regresión
+
+```{r include=FALSE}
+library(rio)
+data1="https://github.com/SebasVillalobos07/Estadistic2/raw/main/Matr%C3%ADcula_mundo.xlsx"
+data1=import(data1)
+str(data1)
+```
+
+Modelo lineal 2:
+En esta segunda hipótesis plasmado en este modelo lineal, veremos cómo el porcentaje de de inscripción escolar secundaria neta por país (Matricula) es afectado por el PBI per cápita POR país (PBIPC) y el porcentaje de inversión del Estado en Educación POR país (gastoedu), controlado ambas variables por el porcentaje de la población que se encuentra por debajo de la línea de pobreza por país (Pobreza).
+
+```{r}
+modelo2=formula(Matricula~PBIPC+Pobreza+gastoedu)
+hip2=lm(modelo2,data=data1)
+stargazer(hip2,type = "text",intercept.bottom = FALSE)
+summary(hip2)
+```
+
+D) Análisis de gluster
+
+```{r}
+proyeccion = cmdscale(g.dist, k=2,add = T)
+base= ggplot(dataClus,aes(x=dim1, y=dim2,label=row.names(dataClus))) 
+base + geom_text(size=2, aes(color=as.factor(diana)))  + labs(title = "DIANA")
+```
+
+E) Análisis de factorial
+
+```{r}
+fa.diagram(resfa)
+```
+
+F) Conclusiones
+
+La conclusión que se puede llegar a raíz del análisis de estas variables es que ambas bases de datos si pueden ser clusterizadas de manera óptima, mas no puede realizar el análisis factorial de manera confirmatoria al aumentar una variable nueva.
+
+G) Anexos
+
+Aquí se presentan los procesos de análisis tanto en regresión clusterización y factoriales
+
+Modelo lineal 1:
+En esta primera hipótesis plasmado en este modelo lineal, veremos cómo el porcentaje de de inscripción escolar secundaria neta por país (Matricula) es afectado por el PBI per cápita POR país (PBIPC) y el porcentaje de inversión del Estado en Educación POR país (gastoedu).
+
+```{r}
+modelo1=formula(Matricula~PBIPC+gastoedu)
+library(stargazer)
+hip1=lm(modelo1,data=data1)
+stargazer(hip1,type = "text",intercept.bottom = FALSE)
+summary(hip1)
+```
+
+```{r}
+modelo2=formula(Matricula~PBIPC+Pobreza+gastoedu)
+hip2=lm(modelo2,data=data1)
+stargazer(hip2,type = "text",intercept.bottom = FALSE)
+summary(hip2)
+```
+
+Asimismo, notamos que hay una variación de un modelo a otro del valor del Residual Standar Error (RSE). 
+La comparación de modelos usando la tabla de análisis de varianza (t-anova) propone como hipótesis nula que los modelos no difieren (no se ha reducido el error al pasar de un modelo al otro). Como la comparación es significativa (viendo el Pr(>F)), rechazamos igualdad de modelos
+En conclusión, el modelo 2 es la más óptima al reducir el error incluyendo una variable adicional.
+
+Prueba T-Anova
+```{r}
+tanova=anova(hip1,hip2)
+stargazer(tanova,type = 'text',summary = F,title = "Table de Análisis de Varianza")
+```
+
+Para confirmar esta elección, debemos realizar algunos diagnósticos adicionales.
+
+1. Lineablidad:
+
+```{r}
+plot(hip2, 1)
+```
+
+2. Homocedasticidad: se asume que el error del modelo de regresión no afecta la varianza o dispersión de la estimación.
+
+```{r}
+plot(hip2, 3)
+```
+
+3. Test Breusch-Pagan: 
+
+```{r}
+library(lmtest)
+bptest(hip2)
+```
+
+El p-value de esta prueba es mayor a 0.05, por lo que no se rechaza que el modelo muestra una homocedasticidad entre las variables.
+
+4. Normalidad de residuos
+
+```{r}
+plot(hip2, 2)
+```
+
+5. Test de Shapiro-Wilk con residuales
+```{r}
+shapiro.test(hip2$residuals)
+```
+
+El p-value en la muestra de shapiro indica que es 0.1138, es decir mayor a 0.05, por lo que significa que no se rechaza que en el modelo existe una normalidad de residuos.
+
+6. Test de no multicolinedad:
+
+```{r}
+library(DescTools)
+VIF(hip2) 
+```
+
+Observamos que las variables independientes no son mayores a 5 entre si, por lo que no existe una correlación entre ellos, es decir, no hay problema alguno entre ellos.
+
+7. Valores influyentes:
+
+```{r}
+plot(hip2, 5)
+```
+
+8. índice de Cook y valores predecidos: Existencia de casos influyentes
+
+```{r}
+checkHip2=as.data.frame(influence.measures(hip2)$is.inf)
+head(checkHip2)
+
+checkHip2[checkHip2$cook.d & checkHip2$hat,]
+```
+
+Todo clusterización
+
+Ahora, utilizamos otra base de datos para clusterizar información relevante y poder analizarlo de manera factorial
+
+```{r include=FALSE}
+data2="https://github.com/fernandaVR1/Est-2/raw/main/ENTREGABLE%201.xlsx"
+data2=import(data2)
+str(data2)
+```
+
+Vemos los nombres y ajustamos para una unión correcta
+
+```{r}
+list(names(data1), names(data2))
+```
+
+Se realiza el MERGE más sencillo
+
+```{r}
+allData=merge(data1,data2,by.x='Pais', by.y='paises')
+str(allData)
+```
+
+Observamos la estructura (descripción estadísitica)
+
+```{r}
+summary(allData)
+```
+
+Observamos la distribución (posible transformación)
+
+```{r}
+boxplot(allData[,-1])
+```
+
+Transformación de las variables
+
+```{r}
+library(BBmisc)
+boxplot(normalize(allData[,-1],method='range',range=c(0,1)))
+boxplot(normalize(allData[,-1],method='standardize'))
+```
+
+Se opta por la segunda opción del boxplot
+
+```{r}
+allData[,-1]=normalize(allData[,-1],method='standardize')
+allData=allData[complete.cases(allData),]
+
+summary(allData)
+
+cor(allData[,-1])
+```
+
+Ahora, hacemos el proceso de clusterización
+
+```{r}
+dataClus=allData[,-1]
+row.names(dataClus)=allData$Pais
+```
+
+Formamos la base "dataClus"
+
+```{r}
+library(cluster)
+g.dist = daisy(dataClus, metric="gower")
+```
+
+Proponemos la cantidad de clusters
+
+```{r}
+set.seed(123)
+pam.resultado=pam(g.dist,8,cluster.only = F)
+
+dataClus$pam=pam.resultado$cluster
+```
+
+Resultado preliminar del cluster
+
+```{r}
+aggregate(.~ pam, data=dataClus,mean)
+```
+
+Recodificación del cluster
+
+```{r}
+original=aggregate(.~ pam, data=dataClus,mean)
+original[order(original$PBIPC),]
+```
+
+```{r}
+dataClus$pam=dplyr::recode(dataClus$pam, `7` = 1, `8`=2,`1`=3, `5` = 4, `6`=5,`3`=6, `2` = 7, `4`=8)
+```
+
+Proposición de cantidad de clusters:
+
+```{r}
+library(factoextra)
+fviz_nbclust(dataClus, pam,diss=g.dist,method = "gap_stat",k.max = 8,verbose = F)
+```
+
+Estrategia jerárquica
+
+1) Estrategia aglomerativa
+
+```{r}
+set.seed(123)
+library(factoextra)
+
+res.agnes<- hcut(g.dist, k = 8,hc_func='agnes',hc_method = "ward.D")
+
+dataClus$agnes=res.agnes$cluster
+```
+
+Resultado preliminar del cluster
+
+```{r}
+aggregate(.~ agnes, data=dataClus,mean)
+```
+
+Recodificación del cluster
+
+```{r}
+original=aggregate(.~ agnes, data=dataClus,mean)
+original[order(original$PBIPC),]
+```
+
+```{r}
+dataClus$agnes=dplyr::recode(dataClus$agnes, `7` = 1, `8`=2,`1`=3, `5` = 4, `6`=5,`3`=6, `2` = 7, `4`=8)
+```
+
+Visualización de diagrama
+
+```{r}
+fviz_dend(res.agnes, cex = 0.7, horiz = T)
+```
+
+Comparando
+
+```{r}
+table(dataClus$pam,dataClus$agnes,dnn = c('Particion','Aglomeracion'))
+```
+
+Proposición de clusters:
+
+PAM
+
+```{r}
+library(factoextra)
+fviz_nbclust(dataClus, pam,diss=g.dist,method = "gap_stat",k.max = 8,verbose = F)
+```
+
+AGNES
+
+```{r}
+fviz_nbclust(dataClus, hcut,diss=g.dist,method = "gap_stat",k.max = 8,verbose = F,hc_func = "agnes")
+```
+
+2) Estrategia divisa
+
+```{r}
+set.seed(123)
+res.diana <- hcut(g.dist, k = 8,hc_func='diana')
+dataClus$diana=res.diana$cluster
+```
+
+Resultado preliminar
+
+```{r}
+aggregate(.~ diana, data=dataClus,mean)
+```
+
+Visualización
+
+```{r}
+fviz_dend(res.diana, cex = 0.7, horiz = T)
+```
+
+Comparando
+
+```{r}
+table(dataClus$diana,dataClus$agnes,dnn = c('Division','Aglomeracion'))
+```
+
+DIANA
+
+```{r}
+fviz_nbclust(dataClus, hcut,diss=g.dist,method = "gap_stat",k.max = 8,verbose = F,hc_func = "diana")
+```
+
+Ahora observamos:
+
+3)Estrategias de densidad
+
+```{r}
+proyeccion = cmdscale(g.dist, k=8,add = T)
+```
+
+Utilizamos la estrategia de escalamiento multidimensional
+
+```{r}
+dataClus$dim1 <- proyeccion$points[,1]
+dataClus$dim2 <- proyeccion$points[,2]
+```
+
+Observación del mapa
+
+```{r}
+base= ggplot(dataClus,aes(x=dim1, y=dim2,label=row.names(dataClus))) 
+base + geom_text(size=2)
+```
+
+Gráfico PAM
+
+```{r}
+base= ggplot(dataClus,aes(x=dim1, y=dim2)) +  coord_fixed()
+base + geom_point(size=2, aes(color=as.factor(pam)))  + labs(title = "PAM")
+```
+
+Gráfico AGNES
+
+```{r}
+base + geom_point(size=2, aes(color=as.factor(agnes))) + labs(title = "AGNES")
+```
+
+Gráfico DIANA
+
+```{r}
+base + geom_point(size=2, aes(color=as.factor(diana))) + labs(title = "DIANA")
+```
+
+Ahora calculamos el epsilon mediante dbscan
+
+```{r}
+g.dist.cmd = daisy(dataClus[,c('dim1','dim2')], metric = 'euclidean')
+library(dbscan)
+kNNdistplot(g.dist.cmd, k=3)
+```
+
+Obteniendo clusters:
+
+```{r}
+library(fpc)
+db.cmd = fpc::dbscan(g.dist.cmd, eps=0.065, MinPts=3,method = 'dist')
+db.cmd
+```
+
+Ahora lo colocamos en otra columna
+
+```{r}
+dataClus$db=as.factor(db.cmd$cluster)
+```
+
+Graficando:
+
+```{r}
+library(ggrepel)
+base= ggplot(dataClus[dataClus$db!=0,],aes(x=dim1, y=dim2)) + coord_fixed()
+
+dbplot= base + geom_point(aes(color=db)) 
+
+dbplot + geom_point(data=dataClus[dataClus$db==0,],
+                    shape=0) 
+```
+
+Evaluando los resultados
+
+```{r}
+set.seed(123)
+grupos=4
+res.pam=pam(g.dist,k = grupos,cluster.only = F)
+dataClus$pam=res.pam$cluster
+
+###agnes
+res.agnes<- hcut(g.dist, k =grupos,hc_func='agnes',hc_method = "ward.D")
+dataClus$agnes=res.agnes$cluster
+
+### diana
+res.diana <- hcut(g.dist, k = grupos,hc_func='diana')
+dataClus$diana=res.diana$cluster
+```
+
+Evaluamos resultados
+
+```{r}
+fviz_silhouette(res.pam)
+```
+
+```{r}
+fviz_silhouette(res.agnes)
+```
+
+```{r}
+fviz_silhouette(res.diana)
+```
+
+Ahora usamos el método jerárquico divisivo
+
+```{r}
+library(magrittr)
+```
+
+```{r}
+silPAM=data.frame(res.pam$silinfo$widths)
+silPAM$country=row.names(silPAM)
+poorPAM=silPAM[silPAM$sil_width<0,'country']%>%sort()
+
+silAGNES=data.frame(res.agnes$silinfo$widths)
+silAGNES$country=row.names(silAGNES)
+poorAGNES=silAGNES[silAGNES$sil_width<0,'country']%>%sort()
+
+silDIANA=data.frame(res.diana$silinfo$widths)
+silDIANA$country=row.names(silDIANA)
+poorDIANA=silDIANA[silDIANA$sil_width<0,'country']%>%sort()
+
+library("qpcR") 
+mal_Clus=as.data.frame(qpcR:::cbind.na(poorPAM, poorAGNES,poorDIANA))
+mal_Clus
+```
+
+Ahora podemos usar la teoría de conjuntos para ver qué casos están mal clusterizados en todas las técnicas.
+
+```{r}
+intersect(poorPAM,poorAGNES)
+```
+
+```{r}
+setdiff(poorPAM,poorAGNES)
+```
+
+```{r}
+setdiff(poorAGNES,poorPAM)
+```
+
+Gráfico final
+
+```{r}
+proyeccion = cmdscale(g.dist, k=2,add = T)
+base= ggplot(dataClus,aes(x=dim1, y=dim2,label=row.names(dataClus))) 
+base + geom_text(size=2, aes(color=as.factor(diana)))  + labs(title = "DIANA")
+```
+
+Todo factorial
+
+Ahora pasamos a realizar el análisis factorial (preparatorio)
+
+```{r}
+allData=na.omit(allData)
+
+dontselect=c("Pais")
+select=setdiff(names(allData),dontselect)
+theData=allData[,select]
+```
+
+Calculamos la matriz de correlación
+
+```{r}
+library(polycor)
+corMatrix=polycor::hetcor(allData)$correlations
+```
+
+Vemos un pequeño gráfico
+
+```{r}
+library(ggcorrplot)
+
+ggcorrplot(corMatrix)
+```
+
+Observamos si los datos nos permiten factorizar
+
+```{r}
+library(psych)
+psych::KMO(corMatrix)
+```
+
+Matriz identidad
+Hnula: La matriz de correlacion es una matriz identidad
+
+```{r}
+cortest.bartlett(corMatrix,n=nrow(allData))$p.value>0.05
+```
+
+Matriz singular
+Hnula: La matriz de correlacion es una matriz singular.
+
+```{r}
+library(matrixcalc)
+
+is.singular.matrix(corMatrix)
+```
+
+Determinamos en cuantos factores o variables latentes podríamos redimensionar la data
+
+```{r}
+fa.parallel(theData,fm = 'ML', fa = 'fa',correct = T)
+```
+
+Redimensionamos el número de factores
+
+```{r}
+library(GPArotation)
+resfa <- fa(theData,
+            nfactors = 1,
+            cor = 'mixed',
+            rotate = "varimax",
+            fm="minres")
+print(resfa$loadings)
+```
+
+Resultado mejorado
+
+```{r}
+print(resfa$loadings,cutoff = 0.5)
+```
+
+Resultado visual
+
+```{r}
+fa.diagram(resfa)
+```
+
+¿Qué variables aportaron más a los factores?
+
+```{r}
+sort(resfa$communality)
+```
+
+¿Qué variables contribuyen a más de un factor?
+
+```{r}
+sort(resfa$complexity)
+```
+
+¿Qué nombre le darías?
+
+```{r}
+as.data.frame(resfa$scores)%>%head()
+```
+
+Le daría nombre PBI
+
+```{r}
+allData$efa=resfa$scores
+
+ggplot(data=allData,aes(x=Pais,y=efa)) + geom_point() + theme_minimal()
+```
+
+```{r}
+library(BBmisc)
+allData$efa_ok=normalize(allData$efa, 
+                       method = "range", 
+                       margin=2,
+                       range = c(0, 10))
+```
+
+```{r}
+ggplot(data=allData,aes(x=Pais,y=efa_ok)) + geom_point() + theme_minimal()
+```
+
+Ahora pasamos a realizar el análisis factorial (confirmatorio)
+
+```{r}
+model <- ' PBI  =~ EVN + TMI + Matricula + Pobreza + PBIPC + GPBI'
+```
+
+```{r}
+theDataNorm=as.data.frame(scale(theData))
+
+library(lavaan)
+```
+
+```{r}
+cfa_fit <- cfa(model, data=theDataNorm, 
+           std.lv=TRUE,  
+           missing="fiml")
+```
+
+Preparamos los tests:
+
+```{r}
+allParamCFA=parameterEstimates(cfa_fit,standardized = T)
+allFitCFA=as.list(fitMeasures(cfa_fit))
+```
+
+Si cada indicador tiene una buena conexión con su latente (ver p valor)
+
+```{r}
+allParamCFA[allParamCFA$op=="=~",]
+```
+
+El ChiSquare es NO significativo? (p_value debe ser mayor a 0.05 para que sea bueno)
+
+```{r}
+allFitCFA[c("chisq", "df", "pvalue")]
+```
+
+El Índice Tucker Lewi es mayor a 0.9?
+
+```{r}
+allFitCFA$tli
+```
+
+La Raíz del error cuadrático medio de aproximación es menor a 0.05?
+
+```{r}
+allFitCFA[c('rmsea.ci.lower','rmsea' ,'rmsea.ci.upper')]
+```
+
+Ya sabemos que no hay buen augurio.
+
+```{r}
+scorescfa=normalize(lavPredict(cfa_fit),
+                    method = "range", 
+                    margin=2, # by column
+                    range = c(0, 10))
+```
+
+De ahi que:
+
+```{r}
+allData$cfa_ok=scorescfa
+```
+
+Veamos ambos scores calculados
+
+```{r}
+ggplot(data=allData,aes(x=cfa_ok,y=efa_ok)) + geom_point() + theme_minimal()
+```
